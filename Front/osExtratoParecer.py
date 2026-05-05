@@ -63,7 +63,7 @@ class TelaExtratorOS(tk.Frame):
         self.olharnavegador_radio.pack(side='left', padx=10)
 
         # --- Área de Resultado ---
-        tk.Label(self.container, text="Resultado:\nSITUACAO |  UNI_ATUAL  | SERVICO |  MOTIVO | PARECER", bg=configura.BG, font=("Arial", 10)).pack()
+        tk.Label(self.container, text="Resultado:\nSITUACAO |  UNI_ATUAL  |  UNI_ENCERRAMENTO  | SERVICO |  MOTIVO | PARECER", bg=configura.BG, font=("Arial", 10)).pack()
         self.txt_output = scrolledtext.ScrolledText(self.container, width=45, height=10, fg="blue")
         self.txt_output.pack(padx=10, pady=5)
 

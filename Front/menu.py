@@ -336,14 +336,17 @@ class ContentArea(tk.Frame):
         self._current = None
 
     def show(self, mod_id, frame_key, **kwargs):
-        """Exibe a tela correspondente ao frame_key, criando se necessario."""
         key = "{}_{}".format(mod_id, frame_key)
 
+        # Telas que sempre precisam ser recriadas com dados frescos
+        NO_CACHE = {"imprimir_os_fiscais"}
+
+        # Se está no no-cache e já existe, destroi o antigo
+        if frame_key in NO_CACHE and key in self._cache:
+            self._cache[key].destroy()
+            del self._cache[key]
+
         if key not in self._cache:
-            # ── Mapeie aqui frame_key -> sua classe real ──────────────────
-            # Exemplo:
-            #   from Front import criarProgramacaoImovel, imprimirOs
-            #
             FRAME_MAP = {
                 "criar_os":           menuOsGerar.TelaMenuOsGerar,
                 "imprimir_os":        imprimirOs.Imprimir_OS,
@@ -357,9 +360,6 @@ class ContentArea(tk.Frame):
                 "extrato_parecer_os": osExtratoParecer.TelaExtratorOS,
                 "encerrar_os": osEncerrar.TelaEncerrarOs,
             }
-        
-            # Por enquanto usa Placeholder para tudo:
-            # FRAME_MAP = {}
 
             cls = FRAME_MAP.get(frame_key)
             if cls:
