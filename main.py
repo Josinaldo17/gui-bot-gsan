@@ -20,20 +20,20 @@ class Aplicacao:
         """Destroi tudo e abre a tela de login."""
         self._fechar_tudo()
 
-        from Front import login
-        login.Login(self.root, mensagem, self)
+        # from Front import login
+        # login.Login(self.root, mensagem, self)
 
-        # frame = tk.Frame(self.root, bg=configura.HEADER_BG)
-        # frame.pack(fill="both", expand=True)
-        # tk.Label(frame, text="Tela de Login",
-        #          bg=configura.HEADER_BG, fg="white",
-        #          font=("Segoe UI", 18, "bold")).pack(expand=True)
-        # btn = tk.Label(frame, text="  Entrar  ->",
-        #                bg=configura.GREEN, fg="white",
-        #                font=("Segoe UI", 11, "bold"),
-        #                padx=16, pady=10, cursor="hand2")
-        # btn.pack(pady=(0, 80))
-        # btn.bind("<Button-1>", lambda _: self.finalizar_login())
+        frame = tk.Frame(self.root, bg=configura.HEADER_BG)
+        frame.pack(fill="both", expand=True)
+        tk.Label(frame, text="Tela de Login",
+                 bg=configura.HEADER_BG, fg="white",
+                 font=("Segoe UI", 18, "bold")).pack(expand=True)
+        btn = tk.Label(frame, text="  Entrar  ->",
+                       bg=configura.GREEN, fg="white",
+                       font=("Segoe UI", 11, "bold"),
+                       padx=16, pady=10, cursor="hand2")
+        btn.pack(pady=(0, 80))
+        btn.bind("<Button-1>", lambda _: self.finalizar_login())
 
     def switch_to_loading(self):
         
