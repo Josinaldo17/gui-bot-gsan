@@ -69,7 +69,6 @@ class Imprimir_OS_Fiscais(tk.Frame):
         self.Data_recebido = kwargs.get('Data', "")
         self.OlharNoNavegador_recebido = kwargs.get('OlharNoNavegador', "")
         self.Dados_recebido = kwargs.get('Dados', [])
-        
         # Estado
         self._grupos: dict       = {}   # nome -> {"open": bool, "check": BoolVar, "os_items": [...]}
         self._os_checks: dict    = {}   # os_id -> {"var": BoolVar, "dados": dict}

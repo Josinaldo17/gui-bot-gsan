@@ -1,11 +1,29 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import Padrao.config as configura
-from ImprimirOs.selenium_imprimir_os import imprimir_os
-from ImprimirOs.selenium_imprimir_lista import imprimir_lista
-from ImprimirOs.imprimir_mapas import juntas_map
 from collections import defaultdict
 import json
+
+
+# --- Mock do objeto de configuração (substitua pelo seu import real) ---
+class Configura:
+    BG       = "#F0F4F8"
+    CARD_BG  = "#FFFFFF"
+    BORDER   = "#CBD5E1"
+    TEXT     = "#1E293B"
+    SUBTEXT  = "#64748B"
+    ACCENT   = "#0077B6"
+    ACCENT2  = "#00B4D8"
+    GREEN    = "#2DC653"
+    GREEN_HV = "#25A244"
+    RED      = "#E53E3E"
+    RED_HV   = "#C53030"
+
+configura = Configura()
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def hover(widget, normal, over):
+    widget.bind("<Enter>", lambda _: widget.config(bg=over))
+    widget.bind("<Leave>", lambda _: widget.config(bg=normal))
 
 
 def card(parent, **kwargs):
@@ -13,6 +31,8 @@ def card(parent, **kwargs):
                     highlightbackground=configura.BORDER,
                     highlightthickness=1, **kwargs)
 
+
+# ── Checkbox moderno (mesmo padrão do projeto) ────────────────────────────────
 class ModernCheck(tk.Frame):
     def __init__(self, parent, var, on_change=None, **kwargs):
         super().__init__(parent, bg=parent.cget("bg"), **kwargs)
@@ -23,17 +43,10 @@ class ModernCheck(tk.Frame):
                             bg=self.cget("bg"), relief="flat",
                             font=("Segoe UI", 9), cursor="hand2")
         self.box.pack()
-
-        if self.var is not None:
-            self._draw()
-
+        self._draw()
         self.box.bind("<Button-1>", self._toggle)
 
     def _draw(self):
-
-        if not hasattr(self, 'var') or self.var is None:
-            return
-
         bg_parent = self.cget("bg")
         if self.var.get():
             self.box.config(text="✔", fg=configura.ACCENT, bg="#EBF5FF",
@@ -58,17 +71,11 @@ class ModernCheck(tk.Frame):
 # ══════════════════════════════════════════════════════════════════════════════
 # TELA PRINCIPAL
 # ══════════════════════════════════════════════════════════════════════════════
-class Imprimir_OS_Fiscais(tk.Frame):
-    def __init__(self, parent, controller=None, **kwargs):
+class TelaAcompanhamento(tk.Frame):
+    def __init__(self, parent, controller=None):
         super().__init__(parent, bg=configura.BG)
         self.controller = controller
 
-        self.Titulo_recebido = kwargs.get('Titulo', 'Erro: Volte para a tela anterior!')
-        self.NomeBotao_recebido = kwargs.get('NomeBotao', "Erro critico")
-        self.Metodo_recebido = kwargs.get('Metodo', "")
-        self.Data_recebido = kwargs.get('Data', "")
-        self.OlharNoNavegador_recebido = kwargs.get('OlharNoNavegador', "")
-        self.Dados_recebido = kwargs.get('Dados', [])
         # Estado
         self._grupos: dict       = {}   # nome -> {"open": bool, "check": BoolVar, "os_items": [...]}
         self._os_checks: dict    = {}   # os_id -> {"var": BoolVar, "dados": dict}
@@ -86,7 +93,7 @@ class Imprimir_OS_Fiscais(tk.Frame):
 
         tk.Label(header, text="📋", bg=configura.ACCENT,
                  font=("Segoe UI", 18)).pack(side="left", padx=(16, 6), pady=8)
-        tk.Label(header, text=f"{self.Titulo_recebido}",
+        tk.Label(header, text="Acompanhamento de Ordens de Serviço",
                  bg=configura.ACCENT, fg="white",
                  font=("Segoe UI", 12, "bold")).pack(side="left", pady=8)
 
@@ -111,7 +118,7 @@ class Imprimir_OS_Fiscais(tk.Frame):
                                        padx=4, pady=6, cursor="hand2")
         self._btn_sel_todos.pack(side="left", padx=(0, 6))
         self._btn_sel_todos.bind("<Button-1>", lambda _: self._toggle_todos(True))
-        configura.hover_bg(self._btn_sel_todos, "#E2E8F0", "#CBD5E1")
+        hover(self._btn_sel_todos, "#E2E8F0", "#CBD5E1")
 
         self._btn_desel_todos = tk.Label(btn_frame, text="  ☐  Desmarcar Todos  ",
                                          bg="#E2E8F0", fg=configura.TEXT,
@@ -119,7 +126,7 @@ class Imprimir_OS_Fiscais(tk.Frame):
                                          padx=4, pady=6, cursor="hand2")
         self._btn_desel_todos.pack(side="left", padx=(0, 16))
         self._btn_desel_todos.bind("<Button-1>", lambda _: self._toggle_todos(False))
-        configura.hover_bg(self._btn_desel_todos, "#E2E8F0", "#CBD5E1")
+        hover(self._btn_desel_todos, "#E2E8F0", "#CBD5E1")
 
         # Separador
         tk.Frame(btn_frame, bg=configura.BORDER, width=1).pack(side="left", fill="y", padx=(0, 16))
@@ -131,16 +138,16 @@ class Imprimir_OS_Fiscais(tk.Frame):
                                 padx=4, pady=6, cursor="hand2")
         btn_cancelar.pack(side="left", padx=(0, 6))
         btn_cancelar.bind("<Button-1>", lambda _: self._cancelar())
-        configura.hover_bg(btn_cancelar, "#FED7D7", "#FEB2B2")
+        hover(btn_cancelar, "#FED7D7", "#FEB2B2")
 
         # Salvar
-        btn_salvar = tk.Label(btn_frame, text=f"  ✔  {self.NomeBotao_recebido}  ",
+        btn_salvar = tk.Label(btn_frame, text="  ✔  Salvar Seleção  ",
                               bg=configura.GREEN, fg="white",
                               font=("Segoe UI", 9, "bold"),
                               padx=4, pady=6, cursor="hand2")
         btn_salvar.pack(side="left")
         btn_salvar.bind("<Button-1>", lambda _: self._salvar())
-        configura.hover_bg(btn_salvar, configura.GREEN, configura.GREEN_HV)
+        hover(btn_salvar, configura.GREEN, configura.GREEN_HV)
 
         # ── Card da lista ─────────────────────────────────────────────────────
         card_lista = card(self)
@@ -201,8 +208,15 @@ class Imprimir_OS_Fiscais(tk.Frame):
 
     # ── Dados ─────────────────────────────────────────────────────────────────
     def _popular_dados(self):
-        
-        dados = self.Dados_recebido 
+        dados = [
+            {"nome": "JOSE BENEDITO PINTO",  "os": "5071122", "matricula": "3247910", "inscricao": "151.130.002.0109.000", "localidade": "151", "setor": "130", "rota": "2"},
+            {"nome": "JOAO BATISTA COBRA",    "os": "5071719", "matricula": "348430",  "inscricao": "111.104.043.0110.000", "localidade": "111", "setor": "104", "rota": "43"},
+            {"nome": "JOSE DE RIBAMAR NUNE",  "os": "5071270", "matricula": "350079",  "inscricao": "111.104.038.0185.000", "localidade": "111", "setor": "104", "rota": "38"},
+            {"nome": "JADIEL RIBEIRO REIS",   "os": "5068807", "matricula": "322849",  "inscricao": "111.104.024.0369.000", "localidade": "111", "setor": "104", "rota": "24"},
+            {"nome": "JADIEL RIBEIRO REIS",   "os": "5068814", "matricula": "322822",  "inscricao": "111.104.024.0370.000", "localidade": "111", "setor": "104", "rota": "24"},
+            {"nome": "MARIA LUCIA SANTOS",    "os": "5071500", "matricula": "410023",  "inscricao": "112.105.010.0088.000", "localidade": "112", "setor": "105", "rota": "10"},
+            {"nome": "MARIA LUCIA SANTOS",    "os": "5071501", "matricula": "410024",  "inscricao": "112.105.010.0089.000", "localidade": "112", "setor": "105", "rota": "10"},
+        ]
 
         agrupado = defaultdict(list)
         for item in dados:
@@ -222,20 +236,31 @@ class Imprimir_OS_Fiscais(tk.Frame):
                              highlightthickness=1)
         row_grupo.pack(fill="x", padx=2, pady=(2, 0))
 
-        # Hover no grupo
+        # Hover no grupo (só aplica nos widgets que não são o checkbox)
         def _enter_grupo(_, r=row_grupo): r.config(bg="#F0F9FF")
         def _leave_grupo(_, r=row_grupo): r.config(bg=configura.CARD_BG)
         row_grupo.bind("<Enter>", _enter_grupo)
         row_grupo.bind("<Leave>", _leave_grupo)
 
-        # Seta expand/collapse
-        self._arrow_lbl = {}
+        # ── Checkbox do grupo — isolado em frame próprio para não disparar expand
+        chk_wrap = tk.Frame(row_grupo, bg=configura.CARD_BG)
+        chk_wrap.pack(side="left", padx=(10, 4), pady=8)
+
+        chk_grupo = ModernCheck(chk_wrap, var_grupo,
+                                on_change=lambda n=nome: self._on_grupo_check(n))
+        chk_grupo.pack()
+
+        # Bloqueia propagação do clique do checkbox para o row_grupo
+        for w in [chk_wrap, chk_grupo, chk_grupo.box]:
+            w.bind("<Button-1>", lambda e: "break", add="+")
+
+        # ── Seta expand/collapse
         arrow = tk.Label(row_grupo, text="▶", bg=configura.CARD_BG,
                          fg=configura.SUBTEXT, font=("Segoe UI", 8),
                          cursor="hand2")
         arrow.pack(side="left", padx=(0, 6))
 
-        # Nome do cliente
+        # ── Nome do cliente
         nome_lbl = tk.Label(row_grupo,
                             text=f"👤  {nome}",
                             bg=configura.CARD_BG, fg=configura.TEXT,
@@ -243,9 +268,15 @@ class Imprimir_OS_Fiscais(tk.Frame):
                             cursor="hand2", anchor="w")
         nome_lbl.pack(side="left", fill="x", expand=True, pady=8)
 
+        # ── Badge contagem OS
+        badge = tk.Label(row_grupo,
+                         text=f"  {len(registros)} OS  ",
+                         bg="#EBF5FF", fg=configura.ACCENT,
+                         font=("Segoe UI", 8, "bold"))
+        badge.pack(side="right", padx=12)
+
         # ── Frame filho (OS — oculto por padrão) ──────────────────────────────
         frame_filho = tk.Frame(self._list_frame, bg="#FAFCFF")
-        # NÃO faz pack ainda
 
         os_items = []
         for r in registros:
@@ -267,15 +298,14 @@ class Imprimir_OS_Fiscais(tk.Frame):
                                  on_change=lambda n=nome: self._on_os_check(n))
             chk_os.pack(side="left", padx=(10, 4), pady=6)
 
-            # Espaçador alinha com seta do grupo
             tk.Label(row_os, text="  ", bg="#FAFCFF",
                      font=("Segoe UI", 8)).pack(side="left")
 
             cols_data = [
-                ("", 220),
+                ("",              220),
                 (r["os"],          90),
-                (r["matricula"],   110),
-                (r["inscricao"],   190),
+                (r["matricula"],  110),
+                (r["inscricao"],  190),
                 (r["localidade"],  60),
                 (r["setor"],       60),
                 (r["rota"],        60),
@@ -289,20 +319,19 @@ class Imprimir_OS_Fiscais(tk.Frame):
             os_items.append({"os_id": os_id, "chk": chk_os, "var": var_os})
 
         self._grupos[nome] = {
-            "open":     False,
-            "check":    var_grupo,
-            "os_items": os_items,
+            "open":       False,
+            "check":      var_grupo,
+            "chk_widget": chk_grupo,
+            "os_items":   os_items,
             "frame_filho": frame_filho,
-            "arrow":    arrow,
-            "row":      row_grupo,
+            "arrow":      arrow,
+            "row":        row_grupo,
         }
         self._frames_os[nome] = frame_filho
 
-        # Bind expand/collapse
+        # Bind expand/collapse apenas nos widgets que não são o checkbox
         for w in [arrow, nome_lbl, row_grupo]:
             w.bind("<Button-1>", lambda _, n=nome: self._toggle_grupo(n))
-
-      
 
     # ── Expand / Collapse ─────────────────────────────────────────────────────
     def _toggle_grupo(self, nome: str):
@@ -341,11 +370,13 @@ class Imprimir_OS_Fiscais(tk.Frame):
             g["check"].set(False)   # indeterminado → desmarca o grupo
         else:
             g["check"].set(False)
+        g["chk_widget"]._draw()
         self._atualizar_contador()
 
     def _toggle_todos(self, valor: bool):
         for nome, g in self._grupos.items():
             g["check"].set(valor)
+            g["chk_widget"]._draw()
             for item in g["os_items"]:
                 item["var"].set(valor)
                 item["chk"]._draw()
@@ -357,40 +388,41 @@ class Imprimir_OS_Fiscais(tk.Frame):
             text=f"{total} OS selecionada{'s' if total != 1 else ''}")
 
     # ── Salvar / Cancelar ─────────────────────────────────────────────────────
-    def _salvar(self, _=None):
+    def _salvar(self):
         selecionados = [
             v["dados"]
             for v in self._os_checks.values()
             if v["var"].get()
         ]
-        configuracao = configura.carregar_configuracao()
 
         if not selecionados:
             messagebox.showwarning("Atenção", "Nenhuma OS selecionada.")
             return
 
-        numeros_OS = [item["os"] for item in selecionados]
+        # Imprime no mesmo formato do dados = [] original
+        print("\n── OS Selecionadas ──")
+        print(json.dumps(selecionados, ensure_ascii=False, indent=2))
 
-        print(self.Metodo_recebido)
-        
+        # Aqui você pode chamar seu controller ou salvar num arquivo:
+        # self.controller.salvar_os(selecionados)
 
-        if self.Metodo_recebido == "Imprimir" :
-            imprimir_os(configuracao["config_imprir_os"]["data"] , numeros_OS, True)
-            messagebox.showinfo("Imprimir", f"Processo Concluido!")
-        elif self.Metodo_recebido == "Listar" :
-            imprimir_lista(selecionados, self.Data_recebido, self.OlharNoNavegador_recebido)
-        elif self.Metodo_recebido == "Mapas" :
-            juntas_map(selecionados, rf"{configuracao['caminho_pdfs_mapas']}", f"{configuracao['caminho_download']}\\mapas_{configuracao['config_imprir_os']['data_os']}.pdf")
-        else:
-            print("Erro, volte a pagina anterior")
-            messagebox.showwarning("Atenção", "Erro, volte a pagina anterior")
+        messagebox.showinfo(
+            "Salvo",
+            f"{len(selecionados)} OS salva{'s' if len(selecionados) != 1 else ''}!\n"
+            "Verifique o console para os dados."
+        )
 
-
-                    
+    def _cancelar(self):
+        self._toggle_todos(False)
 
 
-    def _cancelar(self, _=None):
-        resposta = messagebox.askyesno("Cancelar", f"Você está prestes a cancelar o filtro")
+# ── Entry point ───────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Acompanhamento de OS")
+    root.geometry("1000x620")
+    root.configure(bg=configura.BG)
 
-        if resposta:        
-            self.controller.switch_to_imprimirOS()
+    app = TelaAcompanhamento(root)
+    app.pack(fill="both", expand=True)
+    root.mainloop()
