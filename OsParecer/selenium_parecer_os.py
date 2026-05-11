@@ -21,17 +21,18 @@ def Verificar_dados_os(os, driver):
         # Extração dos campos
         situacaoOS = driver.find_element(By.NAME, "situacaoOS").get_attribute("value")
         unidadeAtual = driver.find_element(By.NAME, "unidadeAtualDescricao").get_attribute("value")
+        unidadeEncerramento = driver.find_element(By.NAME, "unidadeEncerramentoId").get_attribute("value")
         tipoServico = driver.find_element(By.NAME, "tipoServicoDescricao").get_attribute("value")
         motivo = driver.find_element(By.NAME, "motivoEncerramento").get_attribute("value")
         parecer = driver.find_element(By.XPATH, "//textarea[@name='parecerEncerramento']").get_attribute("value")
         
         parecer = parecer.replace("\n", " ")
 
-        return 'Sucesso', situacaoOS, unidadeAtual, tipoServico, motivo, parecer
+        return 'Sucesso', situacaoOS, unidadeAtual, unidadeEncerramento, tipoServico, motivo, parecer
 
     except Exception as e:
         print(f"Erro na OS {os}: {e}")
-        return 'Erro', None, None, None, None, None
+        return 'Erro', None, None, None, None, None, None
 
 def executar_extracao_os(lista_os, txt_output, olhar_no_navegador):
     """Gerencia o loop de extração e o login."""
@@ -51,9 +52,9 @@ def executar_extracao_os(lista_os, txt_output, olhar_no_navegador):
     for os in lista_os:
         os = os.strip()
         if os:
-            status, situ, unid, tipo, mot, parc = Verificar_dados_os(os, driver)
+            status, situ, unid, uniEncerr, tipo, mot, parc = Verificar_dados_os(os, driver)
             
-            resultado = f"{situ}	{unid}	{tipo}	{mot}	{parc}\n"
+            resultado = f"{situ}	{unid}	{uniEncerr}	{tipo}	{mot}	{parc}\n"
 
             # Insere o resultado na tela em tempo real
             txt_output.insert(tk.END, resultado)
