@@ -23,17 +23,10 @@ class ModernCheck(tk.Frame):
                             bg=self.cget("bg"), relief="flat",
                             font=("Segoe UI", 9), cursor="hand2")
         self.box.pack()
-
-        if self.var is not None:
-            self._draw()
-
+        self._draw()
         self.box.bind("<Button-1>", self._toggle)
 
     def _draw(self):
-
-        if not hasattr(self, 'var') or self.var is None:
-            return
-
         bg_parent = self.cget("bg")
         if self.var.get():
             self.box.config(text="✔", fg=configura.ACCENT, bg="#EBF5FF",
@@ -222,20 +215,31 @@ class Imprimir_OS_Fiscais(tk.Frame):
                              highlightthickness=1)
         row_grupo.pack(fill="x", padx=2, pady=(2, 0))
 
-        # Hover no grupo
+        # Hover no grupo (só aplica nos widgets que não são o checkbox)
         def _enter_grupo(_, r=row_grupo): r.config(bg="#F0F9FF")
         def _leave_grupo(_, r=row_grupo): r.config(bg=configura.CARD_BG)
         row_grupo.bind("<Enter>", _enter_grupo)
         row_grupo.bind("<Leave>", _leave_grupo)
 
-        # Seta expand/collapse
-        self._arrow_lbl = {}
+        # ── Checkbox do grupo — isolado em frame próprio para não disparar expand
+        chk_wrap = tk.Frame(row_grupo, bg=configura.CARD_BG)
+        chk_wrap.pack(side="left", padx=(10, 4), pady=8)
+
+        chk_grupo = ModernCheck(chk_wrap, var_grupo,
+                                on_change=lambda n=nome: self._on_grupo_check(n))
+        chk_grupo.pack()
+
+        # Bloqueia propagação do clique do checkbox para o row_grupo
+        for w in [chk_wrap, chk_grupo, chk_grupo.box]:
+            w.bind("<Button-1>", lambda e: "break", add="+")
+
+        # ── Seta expand/collapse
         arrow = tk.Label(row_grupo, text="▶", bg=configura.CARD_BG,
                          fg=configura.SUBTEXT, font=("Segoe UI", 8),
                          cursor="hand2")
         arrow.pack(side="left", padx=(0, 6))
 
-        # Nome do cliente
+        # ── Nome do cliente
         nome_lbl = tk.Label(row_grupo,
                             text=f"👤  {nome}",
                             bg=configura.CARD_BG, fg=configura.TEXT,
@@ -243,9 +247,15 @@ class Imprimir_OS_Fiscais(tk.Frame):
                             cursor="hand2", anchor="w")
         nome_lbl.pack(side="left", fill="x", expand=True, pady=8)
 
+        # ── Badge contagem OS
+        badge = tk.Label(row_grupo,
+                         text=f"  {len(registros)} OS  ",
+                         bg="#EBF5FF", fg=configura.ACCENT,
+                         font=("Segoe UI", 8, "bold"))
+        badge.pack(side="right", padx=12)
+
         # ── Frame filho (OS — oculto por padrão) ──────────────────────────────
         frame_filho = tk.Frame(self._list_frame, bg="#FAFCFF")
-        # NÃO faz pack ainda
 
         os_items = []
         for r in registros:
@@ -267,15 +277,14 @@ class Imprimir_OS_Fiscais(tk.Frame):
                                  on_change=lambda n=nome: self._on_os_check(n))
             chk_os.pack(side="left", padx=(10, 4), pady=6)
 
-            # Espaçador alinha com seta do grupo
             tk.Label(row_os, text="  ", bg="#FAFCFF",
                      font=("Segoe UI", 8)).pack(side="left")
 
             cols_data = [
-                ("", 220),
+                ("",              220),
                 (r["os"],          90),
-                (r["matricula"],   110),
-                (r["inscricao"],   190),
+                (r["matricula"],  110),
+                (r["inscricao"],  190),
                 (r["localidade"],  60),
                 (r["setor"],       60),
                 (r["rota"],        60),
@@ -289,20 +298,19 @@ class Imprimir_OS_Fiscais(tk.Frame):
             os_items.append({"os_id": os_id, "chk": chk_os, "var": var_os})
 
         self._grupos[nome] = {
-            "open":     False,
-            "check":    var_grupo,
-            "os_items": os_items,
+            "open":       False,
+            "check":      var_grupo,
+            "chk_widget": chk_grupo,
+            "os_items":   os_items,
             "frame_filho": frame_filho,
-            "arrow":    arrow,
-            "row":      row_grupo,
+            "arrow":      arrow,
+            "row":        row_grupo,
         }
         self._frames_os[nome] = frame_filho
 
-        # Bind expand/collapse
+        # Bind expand/collapse apenas nos widgets que não são o checkbox
         for w in [arrow, nome_lbl, row_grupo]:
             w.bind("<Button-1>", lambda _, n=nome: self._toggle_grupo(n))
-
-      
 
     # ── Expand / Collapse ─────────────────────────────────────────────────────
     def _toggle_grupo(self, nome: str):
@@ -341,11 +349,13 @@ class Imprimir_OS_Fiscais(tk.Frame):
             g["check"].set(False)   # indeterminado → desmarca o grupo
         else:
             g["check"].set(False)
+        g["chk_widget"]._draw()
         self._atualizar_contador()
 
     def _toggle_todos(self, valor: bool):
         for nome, g in self._grupos.items():
             g["check"].set(valor)
+            g["chk_widget"]._draw()
             for item in g["os_items"]:
                 item["var"].set(valor)
                 item["chk"]._draw()
@@ -384,6 +394,8 @@ class Imprimir_OS_Fiscais(tk.Frame):
         else:
             print("Erro, volte a pagina anterior")
             messagebox.showwarning("Atenção", "Erro, volte a pagina anterior")
+        
+        self.controller.switch_to_imprimirOS()
 
 
                     

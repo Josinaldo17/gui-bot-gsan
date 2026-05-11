@@ -315,7 +315,8 @@ class CriarProgramacaoImovel(tk.Frame):
 
         idEmpresa = self.combo_empresa.get()
         clienteUsuario = self.var_cliente_usuario.get()
-        olhar_no_avegador = self.olhar_no_navegador.get()
+        olhar_no_navegador = self.olhar_no_navegador.get()
+        olhar_no_avegador = not olhar_no_navegador
         Ncadastrador = self.TKcadastrador_select.get()
 
         quant_minima = self.entry_quant_minima.get()
